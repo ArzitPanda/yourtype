@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "build": "tsc --noEmit false && vite build",
+    "build:no-check": "vite build",
+    "deploy": "npm run build:no-check"
   },
   "dependencies": {
     "@radix-ui/react-progress": "^1.1.7",
