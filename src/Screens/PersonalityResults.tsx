@@ -3,6 +3,7 @@ import { Instagram, Copy, Download, Share2 } from 'lucide-react';
 // import html2canvas from 'html2canvas';
 import { toPng } from 'html-to-image';
 import { UserContextStore } from '@/components/context/UserContext';
+import { useNavigate } from 'react-router';
 
 // Mock character data
 
@@ -15,6 +16,7 @@ const PersonalityResults = () => {
   const cardRef = useRef(null);
   const quizContext = useContext(UserContextStore);
   const userDetails = quizContext?.userDetails || {};
+  const navigate =useNavigate();
   
   const characterData = {
     name: userDetails?.userName || "Luna Vibes",
@@ -46,23 +48,7 @@ const PersonalityResults = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const generateInstaText = () => {
-    return `no bc i'm literally a ${characterData.personalityType} ${characterData.character}
 
-✨ ${characterData.name}, ${characterData.age} ✨
-~ ${characterData.aesthetic} ~
-${characterData.mbtiType} energy 💅
-
-literally me:
-${characterData.strengths.map(s => `• ${s}`).join('\n')}
-
-but also me:
-${characterData.weaknesses.slice(0, 2).map(w => `• ${w}`).join('\n')}
-
-${characterData.vibe} 💅
-
-#MainCharacterMoment #PersonalityCheck #CosmicVibes #GenZThings #SelfAware #ThatGirl #Aesthetic #${characterData.mbtiType}`;
-  };
 
   // html2canvas functionality (would normally be imported)
 
@@ -189,7 +175,7 @@ const handleInstagramShare = async () => {
          </div>
          </div>
           {/* Instagram Share - Large */}
-          <div className="col-span-6">
+          <div className="col-span-6 my-2">
             <button
               onClick={handleInstagramShare}
               disabled={isCapturing}
@@ -204,39 +190,40 @@ const handleInstagramShare = async () => {
               ) : (
                 <>
                   <Share2 className="w-5 h-5 relative z-10" />
-                  <span className="relative z-10">share my card</span>
+                  <span className="relative z-10">Flaunt your personality</span>
                   <span className="text-lg relative z-10">✨</span>
                 </>
               )}
             </button>
           </div>
+          <div className="col-span-6 my-4">
+  <button
+    onClick={()=>{
+      navigate("/login")
+    }}
+    className="relative w-full py-5 px-8 rounded-[2rem] bg-black text-yellow-300 font-extrabold text-lg tracking-wide shadow-[0_0_20px_rgba(255,215,0,0.6)] overflow-hidden group transition-transform transform hover:scale-[1.05] hover:shadow-[0_0_35px_rgba(255,215,0,0.9)]"
+  >
+    {/* Glowing border ring */}
+    <span className="absolute inset-0 rounded-[2rem] border-4 border-yellow-400 opacity-20 blur-xl animate-pulse pointer-events-none"></span>
+
+    {/* Animated gold shimmer sweep */}
+    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-300/20 to-transparent skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none"></span>
+
+    {/* Text and Icon Layer */}
+    <div className="relative z-10 flex items-center justify-center space-x-4">
+      <Share2 className="w-6 h-6 text-yellow-300" />
+      <span className="uppercase">Check Compatibility</span>
+      <span className="text-2xl">💫</span>
+    </div>
+  </button>
+</div>
+
 
           {/* Copy Text - Medium */}
-          <div className="col-span-3">
-            <button 
-              onClick={() => {
-                navigator.clipboard.writeText(generateInstaText());
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }}
-              className="w-full bg-slate-800 hover:bg-slate-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 hover:scale-[1.02] flex items-center justify-center space-x-2 border border-slate-700"
-            >
-              <Copy className="w-4 h-4" />
-              <span className="text-sm">{copied ? 'copied!' : 'copy text'}</span>
-            </button>
-          </div>
+       
 
           {/* Save Card - Medium */}
-          <div className="col-span-3">
-            <button 
-            
-              disabled={isCapturing}
-              className="w-full bg-slate-800 hover:bg-slate-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 hover:scale-[1.02] flex items-center justify-center space-x-2 border border-slate-700 disabled:opacity-50"
-            >
-              <Download className="w-4 h-4" />
-              <span className="text-sm">save card</span>
-            </button>
-          </div>
+         
 
           {/* Retake Quiz - Full Width */}
           <div className="col-span-6 text-center pt-2">

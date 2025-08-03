@@ -1,8 +1,9 @@
 import { UserContextStore } from '@/components/context/UserContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import React, { use, useContext, useState } from 'react'
-import { useNavigate } from 'react-router'
+import Cookies from 'js-cookie'
+import React, { use, useContext, useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 
 const UserNameScreen = () => {
 
@@ -10,6 +11,21 @@ const UserNameScreen = () => {
     const [userName, setUserName] = useState<string>('')
     const data = useContext(UserContextStore);
     const navigate = useNavigate()
+    const location = useLocation();
+
+  // Extract query params
+
+  useEffect(()=>{
+  const queryParams = new URLSearchParams(location.search);
+  const requestId:string|null = queryParams.get('requestId');
+  if(requestId!==null || requestId !== undefined){
+    Cookies.set('requestID',requestId || "");
+  }
+
+  },[])
+
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
     {/* Animated Background Elements */}

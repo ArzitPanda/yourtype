@@ -3,9 +3,8 @@ import { ChevronLeft, Stars, Sparkles, ArrowRight, CheckCircle } from 'lucide-re
 import { supabase } from '@/components/context/SupabaseContext';
 import { useNavigate } from 'react-router';
 import { UserContextStore } from '@/components/context/UserContext';
+import Cookies from 'js-cookie';
 
-
-// Type definitions
 interface Scores {
   [key: string]: number;
 }
@@ -29,44 +28,7 @@ interface Answer {
 }
 
 // Mock data structure - replace with actual Supabase fetch
-const mockQuestions: Question[] = [
-  {
-    id: 1,
-    question: "When your friend cancels plans last minute, you:",
-    options: [
-      { id: 'a', text: "Secretly relieved tbh 😅", scores: { introversion: 3, adaptability: 2, emotional_intelligence: 1 } },
-      { id: 'b', text: "Immediately make backup plans", scores: { leadership: 2, adaptability: 3, resilience: 2 } },
-      { id: 'c', text: "Feel genuinely hurt but don't say anything", scores: { emotional_intelligence: 1, introversion: 2, sensitivity: 3 } },
-      { id: 'd', text: "Call them out (respectfully)", scores: { leadership: 3, assertiveness: 3, emotional_intelligence: 2 } },
-      { id: 'e', text: "Use it as me-time for self-care", scores: { self_awareness: 3, introversion: 2, resilience: 2 } },
-      { id: 'f', text: "Already planning revenge (jk... or am I?)", scores: { humor: 3, assertiveness: 1, emotional_intelligence: 1 } }
-    ]
-  },
-  {
-    id: 2,
-    question: "Your ideal Friday night is:",
-    options: [
-      { id: 'a', text: "Netflix + actual chill (alone)", scores: { introversion: 3, self_awareness: 2, creativity: 1 } },
-      { id: 'b', text: "House party with the squad", scores: { extroversion: 3, leadership: 2, adaptability: 2 } },
-      { id: 'c', text: "Deep conversations at 2 AM", scores: { emotional_intelligence: 3, introversion: 2, sensitivity: 2 } },
-      { id: 'd', text: "Trying that new restaurant everyone's talking about", scores: { adaptability: 3, extroversion: 2, curiosity: 2 } },
-      { id: 'e', text: "Working on my side hustle", scores: { ambition: 3, self_discipline: 3, leadership: 1 } },
-      { id: 'f', text: "Whatever happens, happens", scores: { adaptability: 2, resilience: 2, humor: 2 } }
-    ]
-  },
-  {
-    id: 3,
-    question: "When someone disagrees with you publicly, you:",
-    options: [
-      { id: 'a', text: "Defend your point like your life depends on it", scores: { assertiveness: 3, leadership: 2, resilience: 2 } },
-      { id: 'b', text: "Listen and actually consider their perspective", scores: { emotional_intelligence: 3, adaptability: 2, wisdom: 2 } },
-      { id: 'c', text: "Agree to disagree and move on", scores: { adaptability: 2, emotional_intelligence: 2, resilience: 2 } },
-      { id: 'd', text: "Get heated but try to stay cool", scores: { emotional_intelligence: 1, assertiveness: 2, self_discipline: 2 } },
-      { id: 'e', text: "Shut down and avoid the conversation", scores: { introversion: 3, sensitivity: 2, conflict_avoidance: 3 } },
-      { id: 'f', text: "Make a joke to diffuse the tension", scores: { humor: 3, emotional_intelligence: 2, adaptability: 2 } }
-    ]
-  }
-];
+
 
 const QuestionScreen: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -79,15 +41,22 @@ const QuestionScreen: React.FC = () => {
   console.log(quizContext)
 
 
-  async function getPersonalityAnalysis(personalityType:any) {
+  async function getPersonalityAnalysis(personalityType:any,user_id:any) {
+
+
     try {
+
+      const request_id = Cookies.get('requestID') || "" ;
+      console.log(personalityType,user_id)
       const response = await fetch('https://vibgjtjlevdtvqlbntlr.supabase.co/functions/v1/bright-service', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          personality_type: personalityType
+          personality_type: personalityType,
+          user_id:user_id,
+          request_id: request_id
         })
       })
   
@@ -109,9 +78,13 @@ const QuestionScreen: React.FC = () => {
   const navigate = useNavigate();
   // Mock Supabase fetch - replace with actual implementation
 useEffect(() => {
+
+
+  
   const fetchQuestions = async (): Promise<void> => {
     try {
       setIsLoading(true);
+      
 
       const { data, error } = await supabase.rpc('get_random_questions_with_options');
 
@@ -180,24 +153,23 @@ useEffect(() => {
   };
 
   const handleQuizComplete = async (finalScores: Scores): Promise<void> => {
-    // Here you would:
-    // 1. Combine scores with zodiac sign traits
-    // 2. Calculate character type and strengths/weaknesses
-    // 3. Navigate to results screen
     const { data, error } = await supabase
     .from('userdata')
     .insert([
-      { username: quizContext?.userDetails.userName, userage: 24,zodiac_sign:quizContext?.userDetails?.zodiacSign,personality_type:finalScores },
+      { username: quizContext?.userDetails.userName, userage: quizContext?.userDetails.userage,zodiac_sign:quizContext?.userDetails?.zodiacSign,personality_type:finalScores },
     ])
     .select();
     console.log(data);
+    quizContext?.setUserDetails({...quizContext.userDetails,user_id:data[0]?.user_id,error:null});
     if(error){
       console.log(error);
     }
 
-    getPersonalityAnalysis(data[0]?.personality_code)
+    getPersonalityAnalysis(data[0]?.personality_code,data[0]?.user_id)
     .then(result => {
       console.log(result)
+      Cookies.set('user_id', data[0]?.user_id, { expires: 2 }); // 1 day
+
       // Handle the response
     })
     .catch(error => {

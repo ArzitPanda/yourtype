@@ -11,6 +11,7 @@ const UserContext = ({children}:{children:React.ReactNode}) => {
         questionAndAnswer:{},
         zodiacSign:'',
         username:'',
+        requestId:'',
     });
   return (
     <UserContextStore.Provider value={{userDetails, setUserDetails}}>
