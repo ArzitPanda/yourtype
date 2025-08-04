@@ -12,6 +12,7 @@ import { AvatarImage } from '@radix-ui/react-avatar';
 import CompareNowButton from './components/CompareNowButton';
 
 import { useNavigate } from 'react-router';
+import ProfileTab from './components/dashboard/ProfileTab';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -23,50 +24,72 @@ const Dashboard = () => {
   const quizContext= useContext(UserContextStore);
   const navigate  =useNavigate();
   console.log(quizContext)
-  useEffect(() => {
-      const createUserIfNew = async () => {
-        const urlHasSessionToken = window.location.hash.includes('access_token') || window.location.href.includes('code=');
-    
-        if (!urlHasSessionToken) {
-       
-           // Normal page visit, not first login
-        }
-    
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (!user || error) return;
+useEffect(() => {
+  const createUserIfNew = async () => {
+    // Check if we have the token in the URL
+    const hash = window.location.hash;
+    if (!hash.includes('access_token')) return;
 
+    // Parse the access_token, refresh_token, expires_in, etc.
+    const params = new URLSearchParams(hash.substring(1));
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
+    const expires_in = params.get('expires_in');
 
-        const { id, email, user_metadata } = user;
-        const user_id=Cookies.get('user_id')
-        alert(user_id)
-    
-        const { data: existing, error: fetchError } = await supabase
-          .from('authuser')
-          .select('user_id')
-          .eq('user_id', user_id);
+    if (!access_token || !refresh_token || !expires_in) return;
 
-        if ((!existing || existing.length === 0) && !fetchError) {
-          
-          const authdataCheck = await supabase
-          .from('authuser')
-          .select('email')
-          .eq('email', email);
+    // Set the session manually
+    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+      access_token,
+      refresh_token,
+    });
 
-          if(authdataCheck.data?.length===0){
-              await supabase.from('authuser').insert([{
-                  user_id:user_id,
-                  email,
-                  name: user_metadata.full_name ?? ''
-                }]);
-          }
-        }
-    
-        // Clean URL after insert to avoid rechecking
-      
-    
-      createUserIfNew();
+    if (sessionError) {
+      console.error('Session set error:', sessionError.message);
+      return;
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (!user || error) {
+      console.error('Get user error:', error?.message);
+      return;
+    }
+
+    const { id, email, user_metadata } = user;
+    const user_id = Cookies.get('user_id'); // Assuming you have it
+    console.log('User ID from cookie:', user_id);
+
+    // Check if user exists in your `authuser` table
+    const { data: existing, error: fetchError } = await supabase
+      .from('authuser')
+      .select('user_id')
+      .eq('user_id', user_id);
+
+    if ((!existing || existing.length === 0) && !fetchError) {
+      // Also double-check with email
+      const { data: authdataCheck } = await supabase
+        .from('authuser')
+        .select('email')
+        .eq('email', email);
+
+      if (authdataCheck?.length === 0) {
+        await supabase.from('authuser').insert([{
+          user_id,
+          email,
+          name: user_metadata.full_name ?? ''
+        }]);
+        console.log('User inserted in authuser table');
       }
-    }, []);
+    }
+
+    // Optional: clear hash to clean up the URL
+    window.history.replaceState(null, '', window.location.pathname);
+    window.location.reload();
+    
+  };
+
+  createUserIfNew();
+}, []);
   useEffect(() => {
     fetchUserData();
     fetchUserImage();
@@ -440,61 +463,61 @@ const Dashboard = () => {
     );
   };
 
-  const ProfileTab = () => (
-    <div className="space-y-6 animate-fadeIn">
-      <div className="bg-gradient-to-br from-purple-800/20 to-indigo-800/20 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/20">
-        <div className="flex items-center space-x-4 mb-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center">
-            <User className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">{userData.name}</h2>
-            <p className="text-purple-300">@{userData.username}</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-purple-900/30 rounded-xl p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Mail className="w-5 h-5 text-purple-400" />
-              <span className="text-purple-300 text-sm">Email</span>
-            </div>
-            <p className="text-white text-sm break-all">{userData.email}</p>
-          </div>
-          <div className="bg-purple-900/30 rounded-xl p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Calendar className="w-5 h-5 text-purple-400" />
-              <span className="text-purple-300 text-sm">Age</span>
-            </div>
-            <p className="text-white text-lg font-semibold">{userData.age} years</p>
-          </div>
-          <div className="bg-purple-900/30 rounded-xl p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Star className="w-5 h-5 text-purple-400" />
-              <span className="text-purple-300 text-sm">Zodiac</span>
-            </div>
-            <p className="text-white text-lg font-semibold capitalize">{userData.zodiacSign}</p>
-          </div>
-          <div className="bg-purple-900/30 rounded-xl p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Award className="w-5 h-5 text-purple-400" />
-              <span className="text-purple-300 text-sm">Status</span>
-            </div>
-            <p className="text-white text-lg font-semibold">{userData.remainingAttempts > 0 ? 'Premium' : 'Free'}</p>
-          </div>
-        </div>
-        <div className="mt-6 bg-purple-900/30 rounded-xl p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <Target className="w-5 h-5 text-purple-400" />
-            <span className="text-purple-300 text-sm">Attempts</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-white">Remaining: {userData.remainingAttempts}</span>
-            <span className="text-white">Total: {userData.totalAttempts}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // const ProfileTab = () => (
+  //   <div className="space-y-6 animate-fadeIn">
+  //     <div className="bg-gradient-to-br from-purple-800/20 to-indigo-800/20 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/20">
+  //       <div className="flex items-center space-x-4 mb-6">
+  //         <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center">
+  //           <User className="w-8 h-8 text-white" />
+  //         </div>
+  //         <div>
+  //           <h2 className="text-2xl font-bold text-white">{userData.name}</h2>
+  //           <p className="text-purple-300">@{userData.username}</p>
+  //         </div>
+  //       </div>
+  //       <div className="grid grid-cols-2 gap-4">
+  //         <div className="bg-purple-900/30 rounded-xl p-4">
+  //           <div className="flex items-center space-x-2 mb-2">
+  //             <Mail className="w-5 h-5 text-purple-400" />
+  //             <span className="text-purple-300 text-sm">Email</span>
+  //           </div>
+  //           <p className="text-white text-sm break-all">{userData.email}</p>
+  //         </div>
+  //         <div className="bg-purple-900/30 rounded-xl p-4">
+  //           <div className="flex items-center space-x-2 mb-2">
+  //             <Calendar className="w-5 h-5 text-purple-400" />
+  //             <span className="text-purple-300 text-sm">Age</span>
+  //           </div>
+  //           <p className="text-white text-lg font-semibold">{userData.age} years</p>
+  //         </div>
+  //         <div className="bg-purple-900/30 rounded-xl p-4">
+  //           <div className="flex items-center space-x-2 mb-2">
+  //             <Star className="w-5 h-5 text-purple-400" />
+  //             <span className="text-purple-300 text-sm">Zodiac</span>
+  //           </div>
+  //           <p className="text-white text-lg font-semibold capitalize">{userData.zodiacSign}</p>
+  //         </div>
+  //         <div className="bg-purple-900/30 rounded-xl p-4">
+  //           <div className="flex items-center space-x-2 mb-2">
+  //             <Award className="w-5 h-5 text-purple-400" />
+  //             <span className="text-purple-300 text-sm">Status</span>
+  //           </div>
+  //           <p className="text-white text-lg font-semibold">{userData.remainingAttempts > 0 ? 'Premium' : 'Free'}</p>
+  //         </div>
+  //       </div>
+  //       <div className="mt-6 bg-purple-900/30 rounded-xl p-4">
+  //         <div className="flex items-center space-x-2 mb-2">
+  //           <Target className="w-5 h-5 text-purple-400" />
+  //           <span className="text-purple-300 text-sm">Attempts</span>
+  //         </div>
+  //         <div className="flex justify-between">
+  //           <span className="text-white">Remaining: {userData.remainingAttempts}</span>
+  //           <span className="text-white">Total: {userData.totalAttempts}</span>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 
   const OrdersTab = () => (
     <div className="space-y-4 animate-fadeIn">
@@ -624,12 +647,12 @@ const Dashboard = () => {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'profile': return <ProfileTab />;
+      case 'profile': return <ProfileTab userData={userData} />;
       case 'orders': return <OrdersTab />;
       case 'personality': return <PersonalityTab />;
       case 'traits': return <TraitsTab />;
       case 'compatibility' : return <CompatibilityTab/>
-      default: return <ProfileTab />;
+      default: return <ProfileTab userData={userData} />;;
     }
   };
 

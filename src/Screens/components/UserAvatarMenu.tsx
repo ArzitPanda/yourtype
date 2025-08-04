@@ -34,7 +34,7 @@ import {
     };
   
     return (
-   <div className="absolute top-5 left-5 ring-2 ring-yellow-400 rounded-full  z-50">
+   <div className="absolute top-5 right-5 ring-2 ring-yellow-400 rounded-full  z-50">
        <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Avatar className="cursor-pointer border border-white">
