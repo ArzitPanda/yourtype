@@ -1,4 +1,69 @@
+// First, install the required dependencies:
+// npm install @supabase/supabase-js
 
+import React, { useState, useEffect, useContext } from 'react';
+import { User, ShoppingBag, Brain, Star, Award, Calendar, Mail, Target, Heart, TrendingUp, Users, BarChart3, MessageCircle } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, BarChart, Bar, Cell } from 'recharts';
+import Cookies from 'js-cookie';
+import { UserContextStore } from '@/components/context/UserContext';
+import { supabase } from '@/components/context/SupabaseContext';
+import { Avatar } from '@/components/ui/avatar';
+import { AvatarImage } from '@radix-ui/react-avatar';
+import CompareNowButton from './components/CompareNowButton';
+
+import { useNavigate } from 'react-router';
+
+const Dashboard = () => {
+  const [activeTab, setActiveTab] = useState('profile');
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [userImage, setUserImage] = useState(null);
+    const [selectedCompatibility, setSelectedCompatibility] = useState(0);
+  const quizContext= useContext(UserContextStore);
+  const navigate  =useNavigate();
+  console.log(quizContext)
+  useEffect(() => {
+      const createUserIfNew = async () => {
+        const urlHasSessionToken = window.location.hash.includes('access_token') || window.location.href.includes('code=');
+    
+        if (!urlHasSessionToken) {
+          return; // Normal page visit, not first login
+        }
+    
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (!user || error) return;
+    
+        const { id, email, user_metadata } = user;
+        const user_id=Cookies.get('user_id')
+    
+        const { data: existing, error: fetchError } = await supabase
+          .from('authuser')
+          .select('user_id')
+          .eq('user_id', user_id);
+
+        if ((!existing || existing.length === 0) && !fetchError) {
+          
+          const authdataCheck = await supabase
+          .from('authuser')
+          .select('email')
+          .eq('email', email);
+
+          if(authdataCheck.data?.length===0){
+              await supabase.from('authuser').insert([{
+                  user_id:user_id,
+                  email,
+                  name: user_metadata.full_name ?? ''
+                }]);
+          }
+        }
+    
+        // Clean URL after insert to avoid rechecking
+        const url = new URL(window.location.href);
+        url.search = '';
+        url.hash = '';
+        window.history.replaceState({}, document.title, url.toString());
+      };
     
       createUserIfNew();
    
