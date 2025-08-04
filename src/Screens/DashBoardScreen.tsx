@@ -28,7 +28,7 @@ const Dashboard = () => {
         const urlHasSessionToken = window.location.hash.includes('access_token') || window.location.href.includes('code=');
     
         if (!urlHasSessionToken) {
-          return; // Normal page visit, not first login
+           // Normal page visit, not first login
         }
     
         const { data: { user }, error } = await supabase.auth.getUser();
