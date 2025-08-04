@@ -33,9 +33,11 @@ const Dashboard = () => {
     
         const { data: { user }, error } = await supabase.auth.getUser();
         if (!user || error) return;
-    
+
+
         const { id, email, user_metadata } = user;
         const user_id=Cookies.get('user_id')
+        alert(user_id)
     
         const { data: existing, error: fetchError } = await supabase
           .from('authuser')
