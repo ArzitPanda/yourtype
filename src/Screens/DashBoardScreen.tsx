@@ -98,22 +98,22 @@ const Dashboard = () => {
 
       // Transform the data to match your component structure
       const transformedData = {
-        name: data.name,
-        email: data.email,
-        username: data.userdata?.username || 'Unknown',
-        age: data.userdata?.userage || 0,
-        zodiacSign: data.userdata?.zodiac_sign || 'Unknown',
-        personalityCode: data.userdata?.personality_code || 'Unknown',
-        isPremium: data.is_premium || false,
-        totalAttempts: data.total_attempts || 0,
-        remainingAttempts: data.remaining_attempt || 0,
-        orders: data.orders || [],
-        similarity_checks:data.similarity_checks,
+        name: data?.name || '',
+        email: data?.email || '',
+        username: data?.userdata?.username || 'Unknown',
+        age: data?.userdata?.userage || 0,
+        zodiacSign: data?.userdata?.zodiac_sign || 'Unknown',
+        personalityCode: data?.userdata?.personality_code || 'Unknown',
+        isPremium: data?.is_premium || false,
+        totalAttempts: data?.total_attempts || 0,
+        remainingAttempts: data?.remaining_attempt || 0,
+        orders: data?.orders || [],
+        similarity_checks:data?.similarity_checks,
         personality: {
-          strength: data.userdata?.response?.strength || '',
-          weakness: data.userdata?.response?.weakness || '',
-          elaborate: data.userdata?.response?.elaborate || '',
-          traits: data.userdata?.personality_type || {}
+          strength: data?.userdata?.response?.strength || '',
+          weakness: data?.userdata?.response?.weakness || '',
+          elaborate: data?.userdata?.response?.elaborate || '',
+          traits: data?.userdata?.personality_type || {}
         }
       };
 
