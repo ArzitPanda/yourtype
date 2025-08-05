@@ -227,7 +227,7 @@ useEffect(() => {
     // Prepare data for compatibility score visualization
     const compatibilityData = userData.similarity_checks.map((check, index) => ({
       match: `Match ${index + 1}`,
-      score: check.similarity_result.compatibility_score * 100,
+      score: check?.similarity_result?.compatibility_score * 100,
       color: index === selectedCompatibility ? '#8b5cf6' : '#6366f1'
     }));
 
