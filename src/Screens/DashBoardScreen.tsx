@@ -264,7 +264,7 @@ useEffect(() => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-purple-900/30 rounded-xl p-4 text-center">
               <div className="text-3xl font-bold text-white mb-2">
-                {Math.round(similarity_result.compatibility_score * 100)}%
+                {Math.round(similarity_result?.compatibility_score * 100)}%
               </div>
               <div className="text-purple-300 text-sm">Compatibility Score</div>
             </div>
