@@ -10,6 +10,7 @@ import {
   import { supabase } from "@/components/context/SupabaseContext";
   import { LogOut } from "lucide-react";
   import { useEffect, useState } from "react";
+import Cookies from "js-cookie";
   
   const UserAvatarMenu = () => {
     const [user, setUser] = useState<any>(null);
@@ -30,6 +31,10 @@ import {
   
     const handleLogout = async () => {
       await supabase.auth.signOut();
+      Cookies.remove("AUTHUSER_ID") 
+       Cookies.remove("FIRST_LOGIN_AUTH_USER") 
+        Cookies.remove("is_quiz_taken") 
+         Cookies.remove("requestID") 
       window.location.href = "/"; // or route to your login page
     };
   

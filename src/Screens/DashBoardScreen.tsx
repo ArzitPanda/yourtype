@@ -11,7 +11,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { AvatarImage } from '@radix-ui/react-avatar';
 import CompareNowButton from './components/CompareNowButton';
 
-import { useNavigate } from 'react-router';
+import { data, useNavigate } from 'react-router';
 import ProfileTab from './components/dashboard/ProfileTab';
 
 const Dashboard = () => {
@@ -59,32 +59,69 @@ useEffect(() => {
     const user_id = Cookies.get('user_id'); // Assuming you have it
     console.log('User ID from cookie:', user_id);
 
-    // Check if user exists in your `authuser` table
+  
+
     const { data: existing, error: fetchError } = await supabase
       .from('authuser')
       .select('user_id')
-      .eq('user_id', user_id);
-
+      .eq('user_id', user_id || 1000000);
+   console.log(existing)
     if ((!existing || existing.length === 0) && !fetchError) {
       // Also double-check with email
+   
       const { data: authdataCheck } = await supabase
         .from('authuser')
-        .select('email')
+        .select('authuser_id')
         .eq('email', email);
 
+        console.log(authdataCheck)
+
       if (authdataCheck?.length === 0) {
-        await supabase.from('authuser').insert([{
+if (user_id === null || user_id === undefined || user_id === '') {
+  const { data: authUserData, error: postgresuserData } = await supabase
+    .from('authuser')
+    .insert([
+      {
+        email,
+        is_quiz_taken: false,
+      },
+    ])
+    .select('authuser_id') // Make sure we return the authuser_id
+    .single();
+console.log(data)
+  if (error) {
+    console.error("Error inserting user:", postgresuserData);
+    return;
+  }
+
+  // Store values in cookies
+  Cookies.set("FIRST_LOGIN_AUTH_USER", "TRUE");
+  Cookies.set("AUTHUSER_ID", authUserData?.authuser_id); // store authuser_id
+
+  navigate("/user-name");
+  console.log('User inserted in authuser table with ID:', authUserData?.authuser_id);
+}
+    else{
+      console.log(user_id,"else block")
+   await supabase.from('authuser').insert([{
           user_id,
           email,
-          name: user_metadata.full_name ?? ''
         }]);
         console.log('User inserted in authuser table');
+    }
       }
+
+      if(authdataCheck[0].authuser_id!==null  ){
+  Cookies.set("FIRST_LOGIN_AUTH_USER", "TRUE");
+  Cookies.set("AUTHUSER_ID", authdataCheck[0].authuser_id);
+      }
+
+
     }
 
     // Optional: clear hash to clean up the URL
-    window.history.replaceState(null, '', window.location.pathname);
-    window.location.reload();
+    // window.history.replaceState(null, '', window.location.pathname);
+    // window.location.reload();
     
   };
 
@@ -218,15 +255,15 @@ useEffect(() => {
     // Prepare data for radar chart
     const radarData = similarity_result.common_traits.map(trait => ({
       trait: trait.trait.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim(),
-      you: trait.p1,
-      partner: trait.p2,
+      partner: trait.p1,
+      you: trait.p2,
       fullMark: 10
     }));
     
 
     // Prepare data for compatibility score visualization
     const compatibilityData = userData.similarity_checks.map((check, index) => ({
-      match: `Match ${index + 1}`,
+      match: check?.for_whom,
       score: check?.similarity_result?.compatibility_score * 100,
       color: index === selectedCompatibility ? '#8b5cf6' : '#6366f1'
     }));
@@ -248,6 +285,7 @@ useEffect(() => {
         <div className="bg-gradient-to-br from-purple-800/20 to-indigo-800/20 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/20">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold text-white">Compatibility Analysis</h3>
+              
             {userData.similarity_checks.length > 1 && (
               <select 
                 value={selectedCompatibility}
@@ -255,7 +293,7 @@ useEffect(() => {
                 className="bg-purple-900/50 border border-purple-500/20 rounded-lg px-3 py-2 text-white text-sm"
               >
                 {userData.similarity_checks.map((check, index) => (
-                  <option key={index} value={index}>Match {index + 1}</option>
+                  <option key={index} value={index}>Match with {check?.for_whom}</option>
                 ))}
               </select>
             )}

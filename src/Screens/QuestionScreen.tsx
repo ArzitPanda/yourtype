@@ -47,11 +47,23 @@ const QuestionScreen: React.FC = () => {
     try {
 
       const request_id = Cookies.get('requestID') || "" ;
+      const {
+  data: { session },
+  error
+} = await supabase.auth.getSession();
+
+if (error || !session) {
+  console.error("Failed to retrieve Supabase session:", error);
+  return;
+}
+
+const accessToken = session.access_token;
       console.log(personalityType,user_id)
       const response = await fetch('https://vibgjtjlevdtvqlbntlr.supabase.co/functions/v1/bright-service', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer '+accessToken
         },
         body: JSON.stringify({
           personality_type: personalityType,
@@ -168,8 +180,8 @@ useEffect(() => {
     getPersonalityAnalysis(data[0]?.personality_code,data[0]?.user_id)
     .then(result => {
       console.log(result)
-      Cookies.set('user_id', data[0]?.user_id, { expires: 2 }); // 1 day
-
+    // 1 day
+        Cookies.set('is_quiz_taken',"true");
       // Handle the response
     })
     .catch(error => {
@@ -181,6 +193,38 @@ useEffect(() => {
       finalScores,
       // zodiacSign: from context
     });
+
+      const isFirstLogin = Cookies.get("FIRST_LOGIN_AUTH_USER");
+      console.log(isFirstLogin)
+    if (isFirstLogin === "TRUE") {
+  const authUserId = Cookies.get("AUTHUSER_ID");
+
+  if (authUserId) { // No need to check for null, undefined covers it
+    console.log(authUserId);
+
+    const { data: updatedUser, error: updateError } = await supabase
+      .from("authuser")
+      .update({
+        user_id: data[0]?.user_id,
+        is_quiz_taken:true // assuming data[0] exists in your scope
+      })
+      .eq("authuser_id", authUserId);
+
+    if (updateError) {
+      console.error("Error updating user:", updateError);
+      return;
+    }
+
+    if (updatedUser) {
+      console.log("User updated:", updatedUser);
+      Cookies.remove("FIRST_LOGIN_AUTH_USER");
+      Cookies.remove("AUTHUSER_ID");
+    }
+  }
+}
+
+
+
     navigate("/final-screen")
     
   };

@@ -33,7 +33,7 @@ const LoginForm = () => {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (user) {
+      if (user &&  user.is_anonymous===false  ) {
         // If already logged in, redirect
         setIsCheckingAuth(true);
         navigate('/dashboard');
@@ -103,13 +103,18 @@ const LoginForm = () => {
     setIsGoogleLoading(true);
 
     try {
-      const { error: authError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-      
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
+       await supabase.auth.signOut(); 
+    
+    const { error:authError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account', 
+        }
+      }
+    });
 
       if (authError) {
         setError(authError.message);

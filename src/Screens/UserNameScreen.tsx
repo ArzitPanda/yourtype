@@ -1,3 +1,4 @@
+import { supabase } from '@/components/context/SupabaseContext'
 import { UserContextStore } from '@/components/context/UserContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,10 +17,23 @@ const UserNameScreen = () => {
   // Extract query params
 
   useEffect(()=>{
+    const checkUser  =async  ()=>{
+          const {
+              data: { session }
+            } = await supabase.auth.getSession();
+      
+            const user = session?.user;
+            if(!user){
+              await supabase.auth.signInAnonymously();
+            }
+    }
+
   const queryParams = new URLSearchParams(location.search);
   const requestId:string|null = queryParams.get('requestId');
   if(requestId!==null || requestId !== undefined){
     Cookies.set('requestID',requestId || "");
+      checkUser()
+
   }
 
   },[])
