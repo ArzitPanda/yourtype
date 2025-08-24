@@ -19,7 +19,7 @@ import {
 
 const ProfileTab = ({ userData }) => {
   const [activeSection, setActiveSection] = useState('overview');
-
+    console.log ("profile tab data is coming", userData)
   const getZodiacEmoji = (sign) => {
     const zodiacEmojis = {
       aries: '♈', taurus: '♉', gemini: '♊', cancer: '♋',
@@ -101,7 +101,7 @@ const ProfileTab = ({ userData }) => {
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
                   <div>
                     <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">
-                      {userData?.name || 'User Name'}
+                      {userData?.username || 'User Name'}
                     </h1>
                     <p className="text-purple-300 text-sm sm:text-base mb-2">
                       @{userData?.username || 'username'}
